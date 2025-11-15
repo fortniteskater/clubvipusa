@@ -1,0 +1,160 @@
+<script>
+function isPageOnline(file) {
+	const status = JSON.parse(localStorage.getItem('vipPageStatus') || '{}');
+	return status[file] !== false;
+}
+if (!isPageOnline('recoveryinput.html')) {
+	document.body.innerHTML = '<div style="display:flex;justify-content:center;align-items:center;height:100vh;"><span style="font-size:3em;color:#e94560;font-weight:bold;animation:flash 1s infinite;">*OFFLINE*</span></div>';
+}
+</script>
+<style>
+@keyframes flash { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
+</style>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>VIP File Recovery</title>
+	<style>
+		body {
+			font-family: 'Segoe UI', Arial, sans-serif;
+			background: linear-gradient(135deg, #1a1a2e, #16213e 80%);
+			color: #fff;
+			margin: 0;
+			padding: 0;
+		}
+		.container {
+			max-width: 500px;
+			margin: 60px auto;
+			background: rgba(34, 34, 51, 0.95);
+			border-radius: 16px;
+			box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+			padding: 32px;
+		}
+		h1 {
+			text-align: center;
+			font-size: 2.2em;
+			margin-bottom: 24px;
+			letter-spacing: 2px;
+		}
+		.file-list {
+			margin-top: 24px;
+		}
+		.file-item {
+			margin-bottom: 12px;
+		}
+		.download-btn {
+			background: #43d8c9;
+			color: #fff;
+			border: none;
+			border-radius: 8px;
+			padding: 6px 14px;
+			font-size: 1em;
+			cursor: pointer;
+			margin-left: 8px;
+		}
+		.download-btn:hover {
+			background: #e94560;
+		}
+	</style>
+</head>
+<body>
+	<div id="passwordPrompt" class="container">
+		<form id="forgotForm" style="display:flex; flex-direction:column; align-items:center; margin-top:16px;">
+			<label for="forgotPassword" style="color:#43d8c9; margin-bottom:8px;">Forgot Password?</label>
+			<input type="password" id="forgotPassword" placeholder="Enter recovery password" style="margin-bottom:8px; padding:10px; border-radius:8px; border:none; font-size:1em; width:80%;">
+			<button type="submit" style="background:#43d8c9; color:#fff; border:none; border-radius:8px; padding:8px 16px; font-size:1em; cursor:pointer;">Recover</button>
+		</form>
+		<div id="forgotError" style="color:#e94560; text-align:center; margin-top:8px; display:none;">Incorrect recovery password.</div>
+		<h1>VIP File Recovery Login</h1>
+		<form id="loginForm" style="display:flex; flex-direction:column; align-items:center;">
+			<input type="password" id="vipPassword" placeholder="Enter secret password" style="margin-bottom:16px; padding:10px; border-radius:8px; border:none; font-size:1em; width:80%;">
+			<button type="submit" style="background:#e94560; color:#fff; border:none; border-radius:8px; padding:12px; font-size:1.1em; cursor:pointer;">Login</button>
+		</form>
+		<div id="loginError" style="color:#e94560; text-align:center; margin-top:16px; display:none;">Incorrect password. Please try again.</div>
+	</div>
+	<div id="mainContent" style="display:none;">
+		<div class="container">
+			<h1>VIP File Recovery</h1>
+			<form id="uploadForm" style="margin-bottom:24px;">
+				<input type="file" id="fileInput" required>
+				<button type="submit" style="background:#43d8c9; color:#fff; border:none; border-radius:8px; padding:10px 18px; font-size:1em; cursor:pointer; margin-left:8px;">Upload File</button>
+			</form>
+			<div class="file-list" id="fileList"></div>
+		</div>
+	</div>
+	<script>
+		const RECOVERY_PASSWORD = "Mm4100!!";
+		document.getElementById('forgotForm').addEventListener('submit', function(e) {
+			e.preventDefault();
+			const input = document.getElementById('forgotPassword').value;
+			if (input === RECOVERY_PASSWORD) {
+				document.getElementById('passwordPrompt').style.display = 'none';
+				document.getElementById('mainContent').style.display = 'block';
+			} else {
+				document.getElementById('forgotError').style.display = 'block';
+			}
+		});
+		const SECRET_PASSWORD = "passwordadmin";
+		document.getElementById('loginForm').addEventListener('submit', function(e) {
+			e.preventDefault();
+			const input = document.getElementById('vipPassword').value;
+			if (input === SECRET_PASSWORD) {
+				document.getElementById('passwordPrompt').style.display = 'none';
+				document.getElementById('mainContent').style.display = 'block';
+			} else {
+				document.getElementById('loginError').style.display = 'block';
+			}
+		});
+
+		function getFiles() {
+			return JSON.parse(localStorage.getItem('vipFiles') || '[]');
+		}
+		function saveFiles(files) {
+			localStorage.setItem('vipFiles', JSON.stringify(files));
+		}
+		function renderFiles() {
+			const fileList = document.getElementById('fileList');
+			const files = getFiles();
+			fileList.innerHTML = '<h3>Stored Files</h3>';
+			if (files.length === 0) {
+				fileList.innerHTML += '<div>No files uploaded yet.</div>';
+			} else {
+				files.forEach((file, i) => {
+					const div = document.createElement('div');
+					div.className = 'file-item';
+					div.innerHTML = `${file.name} <button class='download-btn' onclick='downloadFile(${i})'>Download</button>`;
+					fileList.appendChild(div);
+				});
+			}
+		}
+		window.downloadFile = function(idx) {
+			const files = getFiles();
+			const file = files[idx];
+			const link = document.createElement('a');
+			link.href = file.data;
+			link.download = file.name;
+			document.body.appendChild(link);
+			link.click();
+			document.body.removeChild(link);
+		}
+		document.getElementById('uploadForm').addEventListener('submit', function(e) {
+			e.preventDefault();
+			const input = document.getElementById('fileInput');
+			const file = input.files[0];
+			if (!file) return;
+			const reader = new FileReader();
+			reader.onload = function(evt) {
+				let files = getFiles();
+				files.push({ name: file.name, data: evt.target.result });
+				saveFiles(files);
+				renderFiles();
+				input.value = '';
+			};
+			reader.readAsDataURL(file);
+		});
+		renderFiles();
+	</script>
+</body>
+</html>
