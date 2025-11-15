@@ -1,0 +1,214 @@
+\<script>
+function isPageOnline(file) {
+	const status = JSON.parse(localStorage.getItem('vipPageStatus') || '{}');
+	return status[file] !== false;
+}
+if (!isPageOnline('Main.html')) {
+	document.body.innerHTML = '<div style="display:flex;justify-content:center;align-items:center;height:100vh;"><span style="font-size:3em;color:#e94560;font-weight:bold;animation:flash 1s infinite;">*OFFLINE*</span></div>';
+}
+</script>
+<style>
+@keyframes flash { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
+</style>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>VIP Club Core Website</title>
+	<style>
+		body {
+			font-family: 'Segoe UI', Arial, sans-serif;
+			background: linear-gradient(135deg, #1a1a2e, #16213e 80%);
+			color: #fff;
+			margin: 0;
+			padding: 0;
+		}
+		.container {
+			max-width: 500px;
+			margin: 60px auto;
+			background: rgba(34, 34, 51, 0.95);
+			border-radius: 16px;
+			box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+			padding: 32px;
+		}
+		h1 {
+			text-align: center;
+			font-size: 2.5em;
+			margin-bottom: 16px;
+			letter-spacing: 2px;
+		}
+		.nav-links {
+			text-align:center; 
+			margin-bottom:24px;
+		}
+		.nav-links a {
+			color:#43d8c9; 
+			font-weight:bold; 
+			margin-right:20px; 
+			text-decoration:none;
+		}
+		.nav-links a:last-child {
+			color:#e94560;
+			margin-right:0;
+		}
+		/* New Styles for Payment Screen */
+		.plan {
+			background: #16213e;
+			padding: 15px;
+			margin-bottom: 10px;
+			border-radius: 8px;
+			cursor: pointer;
+			border: 2px solid transparent;
+		}
+		.plan:hover, .plan.selected {
+			border-color: #e94560;
+		}
+		#paymentForm input {
+			width: 100%;
+			padding: 10px;
+			margin-bottom: 10px;
+			border-radius: 4px;
+			border: 1px solid #ccc;
+			box-sizing: border-box; /* Ensures padding doesn't affect width */
+		}
+		#paymentForm button {
+			width: 100%;
+			background: #e94560;
+			color: #fff;
+			border: none;
+			border-radius: 8px;
+			padding: 12px;
+			font-size: 1.1em;
+			cursor: pointer;
+		}
+		.hidden {
+			display: none;
+		}
+	</style>
+</head>
+<body>
+	<div id="passwordPrompt" class="container">
+		<h1>VIP Club Login</h1>
+		<form id="loginForm" style="display:flex; flex-direction:column; align-items:center;">
+			<input type="password" id="vipPassword" placeholder="Enter VIP password" style="margin-bottom:16px; padding:10px; border-radius:8px; border:none; font-size:1em; width:80%;">
+			<button type="submit" style="background:#e94560; color:#fff; border:none; border-radius:8px; padding:12px; font-size:1.1em; cursor:pointer;">Login</button>
+		</form>
+		<div id="loginError" style="color:#e94560; text-align:center; margin-top:16px; display:none;">Incorrect password. Please try again.</div>
+	</div>
+
+	<div id="mainContent" style="display:none;">
+		<div class="container">
+			<h1>VIP Club Core Website</h1>
+			<div class="nav-links">
+				<a href="Sign Up.html">Sign Up</a>
+				<a href="Members.html">Members</a>
+				<a href="PasswordList.html">Password List</a>
+				<a href="chatlog.html">Chat Log</a>
+				<a href="recoveryinput.html">File Recovery</a>
+			</div>
+			<!-- Your core website content here -->
+			<h2>Select Your VIP Plan</h2>
+			<div class="plan-selection">
+				<div class="plan" data-plan-id="basic" data-price="10.00" onclick="selectPlan(this)">
+					<strong>Basic VIP</strong> - $10.00/month
+				</div>
+				<div class="plan" data-plan-id="premium" data-price="25.00" onclick="selectPlan(this)">
+					<strong>Premium VIP</strong> - $25.00/month
+				</div>
+			</div>
+			<button id="proceedToPayment" class="hidden" style="width:100%; margin-top:20px; background:#43d8c9;" onclick="showPaymentForm()">Proceed to Payment</button>
+		</div>
+	</div>
+
+	<div id="paymentScreen" class="container hidden">
+		<h1>Complete Your Purchase</h1>
+		<p>Selected Plan: <strong id="selectedPlanName"></strong> | Total: <strong id="selectedPlanPrice"></strong></p>
+		<form id="paymentForm">
+			<!-- SECURITY NOTE: Do not handle raw credit card numbers in your own inputs. -->
+			<label for="card-element">
+				Credit or debit card details
+			</label>
+			<div id="card-element">
+				<input type="text" placeholder="Card Number (Placeholder)" required>
+				<input type="text" placeholder="MM/YY CVC (Placeholder)" required>
+			</div>
+			
+			<div id="card-errors" role="alert" style="color:#e94560; margin-top:10px;"></div>
+
+			<button type="submit">
+				Pay Now
+			</button>
+		</form>
+		<button onclick="goBackToPlans()" style="background:#16213e; margin-top:10px;">Go Back</button>
+	</div>
+
+	<script>
+		// --- Login Logic ---
+		const PASSWORD = "vip123"; // Change this to your desired password
+		document.getElementById('loginForm').addEventListener('submit', function(e) {
+			e.preventDefault();
+			const input = document.getElementById('vipPassword').value;
+			if (input === PASSWORD) {
+				document.getElementById('passwordPrompt').style.display = 'none';
+				document.getElementById('mainContent').style.display = 'block';
+			} else {
+				document.getElementById('loginError').style.display = 'block';
+			}
+		});
+
+		// --- Payment Logic Placeholders ---
+		let selectedPlan = null;
+
+		function selectPlan(element) {
+			if (selectedPlan) {
+				selectedPlan.classList.remove('selected');
+			}
+			selectedPlan = element;
+			selectedPlan.classList.add('selected');
+			document.getElementById('proceedToPayment').classList.remove('hidden');
+		}
+
+		function showPaymentForm() {
+			document.getElementById('mainContent').style.display = 'none';
+			document.getElementById('paymentScreen').classList.remove('hidden');
+			
+			const planName = selectedPlan.querySelector('strong').textContent;
+			const planPrice = `$${selectedPlan.dataset.price}`;
+
+			document.getElementById('selectedPlanName').textContent = planName;
+			document.getElementById('selectedPlanPrice').textContent = planPrice;
+
+			// Save the selected plan info to localStorage to "save forever"
+			localStorage.setItem('selectedPlanDetails', JSON.stringify({
+				id: selectedPlan.dataset.planId,
+				name: planName,
+				price: selectedPlan.dataset.price
+			}));
+			
+			console.log("Plan details saved to localStorage.");
+		}
+
+		function goBackToPlans() {
+			document.getElementById('paymentScreen').classList.add('hidden');
+			document.getElementById('mainContent').style.display = 'block';
+			// Data remains in localStorage even if they go back. 
+		}
+		
+		document.getElementById('paymentForm').addEventListener('submit', function(e) {
+			e.preventDefault();
+			
+			// Retrieve the *permanently* saved plan information
+			const savedPlan = JSON.parse(localStorage.getItem('selectedPlanDetails'));
+
+			if (savedPlan) {
+				alert(`payment for saved plan: ${savedPlan.name} costing $${savedPlan.price}. This info persists in your browser's local storage.`);
+				
+				// In a real app, this is where you'd send the savedPlan.id to your secure server.
+			} else {
+				alert('No plan information found. Please select a plan again.');
+			}
+		});
+	</script>
+</body>
+</html>
