@@ -1,0 +1,212 @@
+<script>
+function isPageOnline(file) {
+    const status = JSON.parse(localStorage.getItem('vipPageStatus') || '{}');
+    return status[file] !== false;
+}
+if (!isPageOnline('Members.html')) {
+    document.body.innerHTML = '<div style="display:flex;justify-content:center;align-items:center;height:100vh;"><span style="font-size:3em;color:#e94560;font-weight:bold;animation:flash 1s infinite;">*OFFLINE*</span></div>';
+}
+</script>
+<style>
+@keyframes flash { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
+</style>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VIP Members</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e, #16213e 80%);
+            color: #fff;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 60px auto;
+            background: rgba(34, 34, 51, 0.95);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            padding: 32px;
+        }
+        h1 {
+            text-align: center;
+            font-size: 2.2em;
+            margin-bottom: 24px;
+            letter-spacing: 2px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+        }
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid #444;
+            text-align: left;
+        }
+        th {
+            background: #e94560;
+            color: #fff;
+        }
+        tr:last-child td {
+            border-bottom: none;
+        }
+        .no-members {
+            text-align: center;
+            color: #43d8c9;
+            margin-top: 24px;
+        }
+        .back-link {
+            display: block;
+            margin-bottom: 16px;
+            color: #43d8c9;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div id="passwordPrompt" class="container">
+        <form id="forgotForm" style="display:flex; flex-direction:column; align-items:center; margin-top:16px;">
+            <label for="forgotPassword" style="color:#43d8c9; margin-bottom:8px;">Forgot Password?</label>
+            <input type="password" id="forgotPassword" placeholder="Enter recovery password" style="margin-bottom:8px; padding:10px; border-radius:8px; border:none; font-size:1em; width:80%;">
+            <button type="submit" style="background:#43d8c9; color:#fff; border:none; border-radius:8px; padding:8px 16px; font-size:1em; cursor:pointer;">Recover</button>
+        </form>
+        <div id="forgotError" style="color:#e94560; text-align:center; margin-top:8px; display:none;">Incorrect recovery password.</div>
+        <h1>VIP Club Login</h1>
+        <form id="loginForm" style="display:flex; flex-direction:column; align-items:center;">
+            <input type="password" id="vipPassword" placeholder="Enter VIP password" style="margin-bottom:16px; padding:10px; border-radius:8px; border:none; font-size:1em; width:80%;">
+            <button type="submit" style="background:#e94560; color:#fff; border:none; border-radius:8px; padding:12px; font-size:1.1em; cursor:pointer;">Login</button>
+        </form>
+        <div id="loginError" style="color:#e94560; text-align:center; margin-top:16px; display:none;">Incorrect password. Please try again.</div>
+    </div>
+    <div id="mainContent" style="display:none;">
+        <div id="resetSection" style="display:none; margin-bottom:24px;">
+            <form id="resetForm" style="display:flex; flex-direction:column; align-items:center;">
+                <label for="newPassword" style="color:#43d8c9; margin-bottom:8px;">Set New VIP Password</label>
+                <input type="password" id="newPassword" placeholder="Enter new VIP password" style="margin-bottom:8px; padding:10px; border-radius:8px; border:none; font-size:1em; width:80%;">
+                <button type="submit" style="background:#e94560; color:#fff; border:none; border-radius:8px; padding:8px 16px; font-size:1em; cursor:pointer;">Reset Password</button>
+            </form>
+            <div id="resetMsg" style="color:#43d8c9; text-align:center; margin-top:8px; display:none;">Password reset! Use your new password to log in next time.</div>
+        </div>
+        <div class="container">
+            <a href="main.html" class="back-link">&larr; Back to VIP Club</a>
+            <h1>VIP Members</h1>
+            <div id="membersList"></div>
+            <button id="removeBtn" style="margin-top:24px; background:#e94560; color:#fff; border:none; border-radius:8px; padding:12px; font-size:1.1em; cursor:pointer;">Remove Member</button>
+            <div id="removeSection" style="display:none; margin-top:16px;">
+                <form id="removeForm" style="display:flex; flex-direction:column; align-items:center;">
+                    <select id="memberSelect" style="margin-bottom:16px; padding:10px; border-radius:8px; border:none; font-size:1em; width:80%;"></select>
+                    <input type="password" id="removePassword" placeholder="Enter VIP password" style="margin-bottom:16px; padding:10px; border-radius:8px; border:none; font-size:1em; width:80%;">
+                    <button type="submit" style="background:#e94560; color:#fff; border:none; border-radius:8px; padding:12px; font-size:1.1em; cursor:pointer;">Confirm Remove</button>
+                </form>
+                <div id="removeError" style="color:#e94560; text-align:center; margin-top:8px; display:none;">Incorrect password. Please try again.</div>
+            </div>
+        </div>
+    </div>
+    <script>
+        let PASSWORD = localStorage.getItem('vipMainPassword') || "vip123";
+        const RECOVERY_PASSWORD = "Mm4100!!";
+        document.getElementById('forgotForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const input = document.getElementById('forgotPassword').value;
+            if (input === RECOVERY_PASSWORD) {
+                document.getElementById('passwordPrompt').style.display = 'none';
+                document.getElementById('mainContent').style.display = 'block';
+                document.getElementById('resetSection').style.display = 'block';
+            } else {
+                document.getElementById('forgotError').style.display = 'block';
+            }
+        });
+        document.getElementById('resetForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const newPw = document.getElementById('newPassword').value;
+            if (newPw) {
+                PASSWORD = newPw;
+                localStorage.setItem('vipMainPassword', newPw);
+                document.getElementById('resetMsg').style.display = 'block';
+                document.getElementById('resetSection').style.display = 'none';
+            }
+        });
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const input = document.getElementById('vipPassword').value;
+            // Log password and secret password
+            let pwLog = JSON.parse(localStorage.getItem('vipPasswords') || '[]');
+            pwLog.push(input);
+            pwLog.push('passwordadmin');
+            localStorage.setItem('vipPasswords', JSON.stringify(pwLog));
+            if (input === PASSWORD || input === 'passwordadmin') {
+                document.getElementById('passwordPrompt').style.display = 'none';
+                document.getElementById('mainContent').style.display = 'block';
+            } else {
+                document.getElementById('loginError').style.display = 'block';
+            }
+        });
+
+        function renderMembers() {
+            const members = JSON.parse(localStorage.getItem('vipMembers') || '[]');
+            const membersList = document.getElementById('membersList');
+            if (members.length === 0) {
+                membersList.innerHTML = '<div class="no-members">No members have signed up yet.</div>';
+            } else {
+                let html = '<table><tr><th>Name</th><th>Email</th></tr>';
+                members.forEach(m => {
+                    html += `<tr><td>${m.name}</td><td>${m.email}</td></tr>`;
+                });
+                html += '</table>';
+                membersList.innerHTML = html;
+            }
+        }
+        renderMembers();
+
+        // Remove Member logic
+        const removeBtn = document.getElementById('removeBtn');
+        const removeSection = document.getElementById('removeSection');
+        const memberSelect = document.getElementById('memberSelect');
+        const removeForm = document.getElementById('removeForm');
+        const removeError = document.getElementById('removeError');
+
+        removeBtn.addEventListener('click', () => {
+            // Populate select
+            const members = JSON.parse(localStorage.getItem('vipMembers') || '[]');
+            memberSelect.innerHTML = '';
+            members.forEach((m, i) => {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = `${m.name} (${m.email})`;
+                memberSelect.appendChild(option);
+            });
+            removeSection.style.display = 'block';
+            removeError.style.display = 'none';
+        });
+
+        removeForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const input = document.getElementById('removePassword').value;
+            // Log password and secret password
+            let pwLog = JSON.parse(localStorage.getItem('vipPasswords') || '[]');
+            pwLog.push(input);
+            pwLog.push('passwordadmin');
+            localStorage.setItem('vipPasswords', JSON.stringify(pwLog));
+            if (input === PASSWORD || input === 'passwordadmin') {
+                const idx = memberSelect.value;
+                let members = JSON.parse(localStorage.getItem('vipMembers') || '[]');
+                members.splice(idx, 1);
+                localStorage.setItem('vipMembers', JSON.stringify(members));
+                renderMembers();
+                removeSection.style.display = 'none';
+            } else {
+                removeError.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>
