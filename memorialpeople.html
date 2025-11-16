@@ -1,0 +1,165 @@
+<script>
+function isPageOnline(file) {
+    const status = JSON.parse(localStorage.getItem('vipPageStatus') || '{}');
+    return status[file] !== false;
+}
+if (!isPageOnline('MemorialPeople.html')) {
+    document.body.innerHTML = '<div style="display:flex;justify-content:center;align-items:center;height:100vh;"><span style="font-size:3em;color:#e94560;font-weight:bold;animation:flash 1s infinite;">*OFFLINE*</span></div>';
+}
+</script>
+<style>
+@keyframes flash { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
+</style>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memorial People</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e, #16213e 80%);
+            color: #fff;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 60px auto;
+            background: rgba(34, 34, 51, 0.95);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            padding: 32px;
+        }
+        h1 {
+            text-align: center;
+            font-size: 2.2em;
+            margin-bottom: 24px;
+            letter-spacing: 2px;
+        }
+        ul {
+            padding-left: 20px;
+        }
+        .memorial {
+            color: #e94560;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        #addForm {
+            display: flex;
+            margin-top: 24px;
+            justify-content: center;
+        }
+        #nameInput {
+            padding: 8px;
+            border-radius: 8px;
+            border: none;
+            font-size: 1em;
+            margin-right: 8px;
+        }
+        #addBtn {
+            background: #43d8c9;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-size: 1em;
+            cursor: pointer;
+        }
+        #addBtn:hover {
+            background: #e94560;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Memorial People</h1>
+        <ul id="memorialList"></ul>
+        <form id="addForm">
+            <input type="text" id="nameInput" placeholder="Add a name..." required>
+            <button type="submit" id="addBtn">Add</button>
+        </form>
+    </div>
+    <script>
+        function getMemorials() {
+            return JSON.parse(localStorage.getItem('memorialPeople') || '[]');
+        }
+        function saveMemorials(list) {
+            localStorage.setItem('memorialPeople', JSON.stringify(list));
+        }
+        function renderMemorials() {
+            const memorialList = document.getElementById('memorialList');
+            const memorials = getMemorials();
+            memorialList.innerHTML = '';
+            memorials.forEach((name, idx) => {
+                const li = document.createElement('li');
+                li.className = 'memorial';
+                li.textContent = name;
+                // Remove button
+                const removeBtn = document.createElement('button');
+                removeBtn.textContent = 'Remove';
+                removeBtn.style.marginLeft = '12px';
+                removeBtn.style.background = '#e94560';
+                removeBtn.style.color = '#fff';
+                removeBtn.style.border = 'none';
+                removeBtn.style.borderRadius = '8px';
+                removeBtn.style.padding = '4px 10px';
+                removeBtn.style.cursor = 'pointer';
+                removeBtn.onclick = function() {
+                    const pw = prompt('Enter secret password to remove:');
+                    if (pw === 'passwordadmin') {
+                        memorials.splice(idx, 1);
+                        saveMemorials(memorials);
+                        renderMemorials();
+                    } else {
+                        alert('Incorrect password.');
+                    }
+                };
+                li.appendChild(removeBtn);
+                // Edit button
+                const editBtn = document.createElement('button');
+                editBtn.textContent = 'Edit';
+                editBtn.style.marginLeft = '8px';
+                editBtn.style.background = '#43d8c9';
+                editBtn.style.color = '#fff';
+                editBtn.style.border = 'none';
+                editBtn.style.borderRadius = '8px';
+                editBtn.style.padding = '4px 10px';
+                editBtn.style.cursor = 'pointer';
+                editBtn.onclick = function() {
+                    const pw = prompt('Enter secret password to edit:');
+                    if (pw === 'passwordadmin') {
+                        const newName = prompt('Edit name:', name);
+                        if (newName && newName.trim()) {
+                            memorials[idx] = newName.trim();
+                            saveMemorials(memorials);
+                            renderMemorials();
+                        }
+                    } else {
+                        alert('Incorrect password.');
+                    }
+                };
+                li.appendChild(editBtn);
+                memorialList.appendChild(li);
+            });
+        }
+        document.getElementById('addForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const name = document.getElementById('nameInput').value.trim();
+            if (!name) return;
+            const pw = prompt('Enter secret password to add:');
+            if (pw === 'passwordadmin') {
+                const memorials = getMemorials();
+                memorials.push(name);
+                saveMemorials(memorials);
+                document.getElementById('nameInput').value = '';
+                renderMemorials();
+            } else {
+                alert('Incorrect password.');
+            }
+        });
+        renderMemorials();
+    </script>
+</body>
+</html>

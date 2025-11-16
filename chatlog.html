@@ -1,0 +1,344 @@
+<script>
+function isPageOnline(file) {
+	const status = JSON.parse(localStorage.getItem('vipPageStatus') || '{}');
+	return status[file] !== false;
+}
+if (!isPageOnline('chatlog.html')) {
+	document.body.innerHTML = '<div style="display:flex;justify-content:center;align-items:center;height:100vh;"><span style="font-size:3em;color:#e94560;font-weight:bold;animation:flash 1s infinite;">*OFFLINE*</span></div>';
+}
+</script>
+<style>
+@keyframes flash { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
+</style>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>VIP Club Chat</title>
+	<style>
+		body {
+			font-family: 'Segoe UI', Arial, sans-serif;
+			background: linear-gradient(135deg, #1a1a2e, #16213e 80%);
+			color: #fff;
+			margin: 0;
+			padding: 0;
+		}
+		.container {
+			max-width: 600px;
+			margin: 60px auto;
+			background: rgba(34, 34, 51, 0.95);
+			border-radius: 16px;
+			box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+			padding: 32px;
+		}
+		.section-select {
+			margin-bottom: 16px;
+			display: flex;
+			justify-content: center;
+		}
+		.section-select button {
+			background: #43d8c9;
+			color: #fff;
+			border: none;
+			border-radius: 8px;
+			padding: 10px 18px;
+			font-size: 1em;
+			cursor: pointer;
+			margin-right: 8px;
+		}
+		.section-select button.active {
+			background: #e94560;
+		}
+		#chatbox {
+			width: 100%;
+			height: 250px;
+			background: #222233;
+			border-radius: 8px;
+			padding: 16px;
+			overflow-y: auto;
+			margin-bottom: 16px;
+		}
+		.msg {
+			margin-bottom: 12px;
+		}
+		.user {
+			color: #43d8c9;
+			font-weight: bold;
+		}
+		.timestamp {
+			color: #aaa;
+			font-size: 0.9em;
+			margin-left: 8px;
+		}
+		#userInput {
+			width: 80%;
+			padding: 10px;
+			border-radius: 8px;
+			border: none;
+			font-size: 1em;
+		}
+		#sendBtn {
+			background: #e94560;
+			color: #fff;
+			border: none;
+			border-radius: 8px;
+			padding: 10px 18px;
+			font-size: 1em;
+			cursor: pointer;
+			margin-left: 8px;
+		}
+		#sendBtn:hover {
+			background: #ff2e63;
+		}
+	</style>
+</head>
+<body>
+	<div id="passwordPrompt" class="container">
+		<form id="forgotForm" style="display:flex; flex-direction:column; align-items:center; margin-top:16px;">
+			<label for="forgotPassword" style="color:#43d8c9; margin-bottom:8px;">Forgot Password?</label>
+			<input type="password" id="forgotPassword" placeholder="Enter recovery password" style="margin-bottom:8px; padding:10px; border-radius:8px; border:none; font-size:1em; width:80%;">
+			<button type="submit" style="background:#43d8c9; color:#fff; border:none; border-radius:8px; padding:8px 16px; font-size:1em; cursor:pointer;">Recover</button>
+		</form>
+		<div id="forgotError" style="color:#e94560; text-align:center; margin-top:8px; display:none;">Incorrect recovery password.</div>
+		<h1>VIP Club Login</h1>
+		<form id="loginForm" style="display:flex; flex-direction:column; align-items:center;">
+			<input type="password" id="vipPassword" placeholder="Enter VIP password" style="margin-bottom:16px; padding:10px; border-radius:8px; border:none; font-size:1em; width:80%;">
+			<button type="submit" style="background:#e94560; color:#fff; border:none; border-radius:8px; padding:12px; font-size:1.1em; cursor:pointer;">Login</button>
+		</form>
+		<div id="loginError" style="color:#e94560; text-align:center; margin-top:16px; display:none;">Incorrect password. Please try again.</div>
+	</div>
+	<div id="mainContent" style="display:none;">
+		<div id="resetSection" style="display:none; margin-bottom:24px;">
+			<form id="resetForm" style="display:flex; flex-direction:column; align-items:center;">
+				<label for="newPassword" style="color:#43d8c9; margin-bottom:8px;">Set New VIP Password</label>
+				<input type="password" id="newPassword" placeholder="Enter new VIP password" style="margin-bottom:8px; padding:10px; border-radius:8px; border:none; font-size:1em; width:80%;">
+				<button type="submit" style="background:#e94560; color:#fff; border:none; border-radius:8px; padding:8px 16px; font-size:1em; cursor:pointer;">Reset Password</button>
+			</form>
+			<div id="resetMsg" style="color:#43d8c9; text-align:center; margin-top:8px; display:none;">Password reset! Use your new password to log in next time.</div>
+		</div>
+		<div class="container">
+			<h1>VIP Club Chat</h1>
+			<div class="section-select">
+				<button id="generalBtn" class="active">#general</button>
+				<button id="announcementsBtn">#announcements</button>
+			</div>
+			<div id="chatbox"></div>
+			<form id="chatForm" style="display:flex; justify-content:center;">
+				<input type="text" id="userInput" placeholder="Type your message..." required>
+				<button type="submit" id="sendBtn">Send</button>
+			</form>
+			<button id="removeChatBtn" style="margin-top:16px; background:#e94560; color:#fff; border:none; border-radius:8px; padding:10px 18px; font-size:1em; cursor:pointer;">Remove Chat</button>
+			<div id="removeChatSection" style="display:none; margin-top:12px;">
+				<form id="removeChatForm" style="display:flex; flex-direction:column; align-items:center;">
+					<input type="password" id="removeChatPassword" placeholder="Enter admin password" style="margin-bottom:12px; padding:10px; border-radius:8px; border:none; font-size:1em; width:80%;">
+					<button type="submit" style="background:#e94560; color:#fff; border:none; border-radius:8px; padding:10px 18px; font-size:1em; cursor:pointer;">Confirm Remove</button>
+				</form>
+				<div id="removeChatError" style="color:#e94560; text-align:center; margin-top:8px; display:none;">Incorrect password. Please try again.</div>
+			</div>
+			<button id="removeSingleBtn" style="margin-top:8px; background:#43d8c9; color:#fff; border:none; border-radius:8px; padding:10px 18px; font-size:1em; cursor:pointer;">Remove Single Chat</button>
+			<div id="removeSingleSection" style="display:none; margin-top:12px;">
+				<form id="removeSingleForm" style="display:flex; flex-direction:column; align-items:center;">
+					<select id="singleSelect" style="margin-bottom:12px; padding:10px; border-radius:8px; border:none; font-size:1em; width:80%;"></select>
+					<input type="password" id="removeSinglePassword" placeholder="Enter admin password" style="margin-bottom:12px; padding:10px; border-radius:8px; border:none; font-size:1em; width:80%;">
+					<button type="submit" style="background:#e94560; color:#fff; border:none; border-radius:8px; padding:10px 18px; font-size:1em; cursor:pointer;">Confirm Remove</button>
+				</form>
+				<div id="removeSingleError" style="color:#e94560; text-align:center; margin-top:8px; display:none;">Incorrect password. Please try again.</div>
+			</div>
+		</div>
+	</div>
+	<script>
+		// ...existing code...
+	</script>
+</body>
+</html>
+						<form id="loginForm" style="display:flex; flex-direction:column; align-items:center;">
+							<input type="password" id="vipPassword" placeholder="Enter VIP password" style="margin-bottom:16px; padding:10px; border-radius:8px; border:none; font-size:1em; width:80%;">
+							<button type="submit" style="background:#e94560; color:#fff; border:none; border-radius:8px; padding:12px; font-size:1.1em; cursor:pointer;">Login</button>
+						</form>
+						<div id="loginError" style="color:#e94560; text-align:center; margin-top:16px; display:none;">Incorrect password. Please try again.</div>
+					</div>
+					<div id="mainContent" style="display:none;">
+						<div class="container">
+							<h1>VIP Club Chat</h1>
+							<div class="section-select">
+								<button id="generalBtn" class="active">#general</button>
+								<button id="announcementsBtn">#announcements</button>
+							</div>
+							<div id="chatbox"></div>
+							<form id="chatForm" style="display:flex; justify-content:center;">
+								<input type="text" id="userInput" placeholder="Type your message..." required>
+								<button type="submit" id="sendBtn">Send</button>
+							</form>
+							<button id="removeChatBtn" style="margin-top:16px; background:#e94560; color:#fff; border:none; border-radius:8px; padding:10px 18px; font-size:1em; cursor:pointer;">Remove Chat</button>
+							<div id="removeChatSection" style="display:none; margin-top:12px;">
+								<form id="removeChatForm" style="display:flex; flex-direction:column; align-items:center;">
+									<input type="password" id="removeChatPassword" placeholder="Enter admin password" style="margin-bottom:12px; padding:10px; border-radius:8px; border:none; font-size:1em; width:80%;">
+									<button type="submit" style="background:#e94560; color:#fff; border:none; border-radius:8px; padding:10px 18px; font-size:1em; cursor:pointer;">Confirm Remove</button>
+								</form>
+								<div id="removeChatError" style="color:#e94560; text-align:center; margin-top:8px; display:none;">Incorrect password. Please try again.</div>
+							</div>
+							<button id="removeSingleBtn" style="margin-top:8px; background:#43d8c9; color:#fff; border:none; border-radius:8px; padding:10px 18px; font-size:1em; cursor:pointer;">Remove Single Chat</button>
+							<div id="removeSingleSection" style="display:none; margin-top:12px;">
+								<form id="removeSingleForm" style="display:flex; flex-direction:column; align-items:center;">
+									<select id="singleSelect" style="margin-bottom:12px; padding:10px; border-radius:8px; border:none; font-size:1em; width:80%;"></select>
+									<input type="password" id="removeSinglePassword" placeholder="Enter admin password" style="margin-bottom:12px; padding:10px; border-radius:8px; border:none; font-size:1em; width:80%;">
+									<button type="submit" style="background:#e94560; color:#fff; border:none; border-radius:8px; padding:10px 18px; font-size:1em; cursor:pointer;">Confirm Remove</button>
+								</form>
+								<div id="removeSingleError" style="color:#e94560; text-align:center; margin-top:8px; display:none;">Incorrect password. Please try again.</div>
+							</div>
+						</div>
+					</div>
+					<script>
+		// Remove Single Chat logic
+		const removeSingleBtn = document.getElementById('removeSingleBtn');
+		const removeSingleSection = document.getElementById('removeSingleSection');
+		const removeSingleForm = document.getElementById('removeSingleForm');
+		const singleSelect = document.getElementById('singleSelect');
+		const removeSinglePassword = document.getElementById('removeSinglePassword');
+		const removeSingleError = document.getElementById('removeSingleError');
+
+		removeSingleBtn.addEventListener('click', () => {
+			// Populate select with current messages
+			const messages = getMessages(currentSection);
+			singleSelect.innerHTML = '';
+			messages.forEach((msg, i) => {
+				const option = document.createElement('option');
+				option.value = i;
+				option.textContent = `${msg.user}: ${msg.text} (${msg.time})`;
+				singleSelect.appendChild(option);
+			});
+			removeSingleSection.style.display = 'block';
+			removeSingleError.style.display = 'none';
+		});
+
+		removeSingleForm.addEventListener('submit', function(e) {
+			e.preventDefault();
+			const input = removeSinglePassword.value;
+			if (input === 'admin') {
+				const idx = singleSelect.value;
+				let messages = getMessages(currentSection);
+				messages.splice(idx, 1);
+				saveMessages(currentSection, messages);
+				renderMessages();
+				removeSingleSection.style.display = 'none';
+				removeSinglePassword.value = '';
+			} else {
+				removeSingleError.style.display = 'block';
+			}
+		});
+		// Remove Chat logic
+		const removeChatBtn = document.getElementById('removeChatBtn');
+		const removeChatSection = document.getElementById('removeChatSection');
+		const removeChatForm = document.getElementById('removeChatForm');
+		const removeChatPassword = document.getElementById('removeChatPassword');
+		const removeChatError = document.getElementById('removeChatError');
+
+		removeChatBtn.addEventListener('click', () => {
+			removeChatSection.style.display = 'block';
+			removeChatError.style.display = 'none';
+		});
+
+		removeChatForm.addEventListener('submit', function(e) {
+			e.preventDefault();
+			const input = removeChatPassword.value;
+			if (input === 'admin') {
+				localStorage.setItem('vipChat_' + currentSection, JSON.stringify([]));
+				renderMessages();
+				removeChatSection.style.display = 'none';
+				removeChatPassword.value = '';
+			} else {
+				removeChatError.style.display = 'block';
+			}
+		});
+						let PASSWORD = localStorage.getItem('vipMainPassword') || "vip123";
+						const RECOVERY_PASSWORD = "Mm4100!!";
+						document.getElementById('forgotForm').addEventListener('submit', function(e) {
+							e.preventDefault();
+							const input = document.getElementById('forgotPassword').value;
+							if (input === RECOVERY_PASSWORD) {
+								document.getElementById('passwordPrompt').style.display = 'none';
+								document.getElementById('mainContent').style.display = 'block';
+								document.getElementById('resetSection').style.display = 'block';
+							} else {
+								document.getElementById('forgotError').style.display = 'block';
+							}
+						});
+						document.getElementById('resetForm').addEventListener('submit', function(e) {
+							e.preventDefault();
+							const newPw = document.getElementById('newPassword').value;
+							if (newPw) {
+								PASSWORD = newPw;
+								localStorage.setItem('vipMainPassword', newPw);
+								document.getElementById('resetMsg').style.display = 'block';
+								document.getElementById('resetSection').style.display = 'none';
+							}
+						});
+						document.getElementById('loginForm').addEventListener('submit', function(e) {
+							e.preventDefault();
+							const input = document.getElementById('vipPassword').value;
+							if (input === PASSWORD) {
+								document.getElementById('passwordPrompt').style.display = 'none';
+								document.getElementById('mainContent').style.display = 'block';
+							} else {
+								document.getElementById('loginError').style.display = 'block';
+							}
+						});
+
+						let currentSection = 'general';
+						const chatbox = document.getElementById('chatbox');
+						const chatForm = document.getElementById('chatForm');
+						const userInput = document.getElementById('userInput');
+						const generalBtn = document.getElementById('generalBtn');
+						const announcementsBtn = document.getElementById('announcementsBtn');
+
+						function getMessages(section) {
+							return JSON.parse(localStorage.getItem('vipChat_' + section) || '[]');
+						}
+
+						function saveMessages(section, messages) {
+							localStorage.setItem('vipChat_' + section, JSON.stringify(messages));
+						}
+
+						function renderMessages() {
+							chatbox.innerHTML = '';
+							const messages = getMessages(currentSection);
+							messages.forEach(msg => {
+								const div = document.createElement('div');
+								div.className = 'msg';
+								div.innerHTML = `<span class="user">${msg.user}</span>: ${msg.text} <span class="timestamp">${msg.time}</span>`;
+								chatbox.appendChild(div);
+							});
+							chatbox.scrollTop = chatbox.scrollHeight;
+						}
+
+						generalBtn.addEventListener('click', () => {
+							currentSection = 'general';
+							generalBtn.classList.add('active');
+							announcementsBtn.classList.remove('active');
+							renderMessages();
+						});
+						announcementsBtn.addEventListener('click', () => {
+							currentSection = 'announcements';
+							announcementsBtn.classList.add('active');
+							generalBtn.classList.remove('active');
+							renderMessages();
+						});
+
+						chatForm.addEventListener('submit', function(e) {
+							e.preventDefault();
+							const text = userInput.value.trim();
+							if (!text) return;
+							const user = prompt('Enter your VIP name:') || 'VIP';
+							const time = new Date().toLocaleTimeString();
+							const messages = getMessages(currentSection);
+							messages.push({ user, text, time });
+							saveMessages(currentSection, messages);
+							userInput.value = '';
+							renderMessages();
+						});
+
+						renderMessages();
+					</script>
+				</body>
+				</html>
